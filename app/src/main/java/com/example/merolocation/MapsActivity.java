@@ -106,7 +106,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if( !mlocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ) {
             new AlertDialog.Builder(this)
                     .setTitle("GPS not enable")  // GPS not found
-                    .setMessage("Please enable gps ") // Want to enable?
+                    .setMessage("Please enable gps") // Want to enable?
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
