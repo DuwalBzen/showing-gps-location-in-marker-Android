@@ -2,4 +2,5 @@
     <string name="app_name">MeroLocation</string>
     <string name="title_activity_maps">Map</string>
     <string name="title_activity_multiple_marker_map">Map</string>
+    <string name="title_activity_multiple_marker">Map</string>
 </resources>
