@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-import com.example.merolocation.directionhelpers.FetchURL;
-import com.example.merolocation.directionhelpers.TaskLoadedCallback;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -21,7 +19,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleMarkerActivity extends FragmentActivity implements OnMapReadyCallback , TaskLoadedCallback {
+public class MultipleMarkerActivity extends FragmentActivity implements OnMapReadyCallback  {
     Button getDirection;
     private GoogleMap mMap;
     private Polyline currentPolyline;
@@ -52,12 +50,7 @@ public class MultipleMarkerActivity extends FragmentActivity implements OnMapRea
 
         place1 = new MarkerOptions().position(new LatLng(27.658143, 85.3199503)).title("Location 1");
         place2 = new MarkerOptions().position(new LatLng(27.667491, 85.3208583)).title("Location 2");
-        getDirection.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                new FetchURL(MultipleMarkerActivity.this).execute(getUrl(place1.getPosition(), place2.getPosition(), "driving"), "driving");
-            }
-        });
+
 
         mapFragment.getMapAsync(this);
     }
@@ -86,38 +79,18 @@ public class MultipleMarkerActivity extends FragmentActivity implements OnMapRea
         }*/
 
 
-        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+       /* mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 MarkerDetailedBottomSheet bottomSheet=new MarkerDetailedBottomSheet(marker.getTitle() );
                 bottomSheet.show(getSupportFragmentManager(),"detail");
                 return false;
             }
-        });
+        });*/
 
 
 
     }
 
-    private String getUrl(LatLng origin, LatLng dest, String directionMode) {
-        // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
-        // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-        // Mode
-        String mode = "mode=" + directionMode;
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + mode;
-        // Output format
-        String output = "json";
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
-        return url;
-    }
 
-    public void onTaskDone(Object... values) {
-        if (currentPolyline != null)
-            currentPolyline.remove();
-        currentPolyline = mMap.addPolyline((PolylineOptions) values[0]);
-    }
 }

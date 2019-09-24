@@ -4,7 +4,6 @@
     android:id="@+id/drawableLayout_id"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:orientation="vertical"
     tools:context=".MapsActivity">
 
@@ -30,7 +29,7 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="50dp"
                 android:orientation="horizontal"
                 android:background="@drawable/toolbar_roundconer">
 
@@ -39,17 +38,31 @@
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/bookletin"
                     android:textSize="18dp"
+                    android:layout_marginLeft="6dp"
                     android:layout_marginRight="4dp"
                     android:layout_gravity="center"
                     android:text="q"/>
 
                 <EditText
-                    android:layout_width="match_parent"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:layout_width="240dp"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
+                    android:maxLines="1"
                     android:background="@android:color/transparent"
                     android:hint="Where are you going today?"
                     android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/select_vechiles_id"
+                    android:layout_margin="5dp"
+                    android:overlapAnchor="false"
+                    android:background="@drawable/spinner_roundbackgroud"
+                    android:popupBackground="@android:color/transparent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    ></Spinner>
             </LinearLayout>
 
 
@@ -60,25 +73,11 @@
             android:id="@+id/fab_id"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_above="@+id/fab1_id"
-            android:layout_alignParentRight="true"
-            android:layout_marginRight="16dp"
-            android:layout_marginBottom="1dp"
-            android:backgroundTint="@android:color/white"
-            android:src="@drawable/ic_location_on_black_24dp"
-            app:elevation="10dp"
-            app:fabSize="normal" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab1_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
-            android:layout_margin="16dp"
+            android:layout_alignParentRight="true"
+           android:layout_margin="16dp"
             android:backgroundTint="@android:color/holo_red_dark"
-            android:src="@drawable/ic_location_on_black_24dp"
+            android:src="@drawable/ic_gps"
             app:elevation="10dp"
             app:fabSize="normal" />
 

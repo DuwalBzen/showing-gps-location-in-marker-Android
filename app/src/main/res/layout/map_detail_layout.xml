@@ -7,6 +7,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/text_color_blue"
         android:text="Parking Location Name"
         android:textSize="16sp"
         android:padding="10dp"
@@ -25,6 +26,7 @@
     <Button
         android:id="@+id/direction"
         android:layout_gravity="end"
+        android:background="@drawable/spinner_roundbackgroud"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Direction"

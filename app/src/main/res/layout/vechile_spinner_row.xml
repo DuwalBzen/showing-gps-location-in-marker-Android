@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_margin="15dp"
+    android:padding="5dp"
+    android:layout_width="wrap_content" android:layout_height="wrap_content">
+
+
+    <ImageView
+        android:id="@+id/vechile_image_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/motorcycle_ic"/>
+
+    <TextView
+        android:id="@+id/vechile_name_id"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="4dp"
+        android:layout_toRightOf="@+id/vechile_image_id"
+        android:background="@drawable/spinner_roundconner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="vechiles_name_id"/>
+</RelativeLayout>

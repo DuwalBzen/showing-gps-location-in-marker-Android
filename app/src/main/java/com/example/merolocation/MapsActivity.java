@@ -12,10 +12,12 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -28,10 +30,22 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.merolocation.directionhelpers.FetchURL;
-import com.example.merolocation.directionhelpers.TaskLoadedCallback;
+import com.directions.route.AbstractRouting;
+import com.directions.route.Route;
+import com.directions.route.RouteException;
+import com.directions.route.Routing;
+import com.directions.route.RoutingListener;
+import com.example.merolocation.Adapter.VechileAdapter;
+import com.example.merolocation.Model.vechicelSpinner_listModel;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -49,24 +63,26 @@ import com.google.android.material.navigation.NavigationView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
+public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback , RoutingListener {
 
     private ActionBarDrawerToggle mActionBarDrawerToggle;
     private NavigationView mnavigationMenu;
     private DrawerLayout mDrawerLayout;
     private Toolbar mToolbar;
-
-    private FloatingActionButton fab1_id;
-    private Polyline currentPolyline;
+    private Spinner vechileSpinner;
+    private ArrayList<vechicelSpinner_listModel> vechileCategory;
+    private VechileAdapter mAdapter;
+    private FloatingActionButton locationFab;
     private Double myLatitude;
     private Double myLongitude;
-    private Double myDesLatitude;
-    private Double myDesLongitude;
     private final int locationRequestCode = 0;
     private LocationManager mlocationManager;
     private LocationListener mLocationListener;
     private GoogleMap mMap;
     private String FirstZoomLocation = "Yes";
+    private List<Polyline> polylines;
+    private static final int[] COLORS = new int[]{R.color.primary_dark_material_light};
+    private Boolean isGPs = false;
 
 
     ArrayList<LatLngModel> lat_lng = new ArrayList<>();
@@ -77,33 +93,80 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        polylines = new ArrayList<>();
+
+        if (Build.VERSION.SDK_INT >= 19 && Build.VERSION.SDK_INT < 21) {
+            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, true);
+        }
+        if (Build.VERSION.SDK_INT >= 19) {
+            getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        }
+        //make fully Android Transparent Status bar
+        if (Build.VERSION.SDK_INT >= 21) {
+            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, false);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
 
         setUpToolbar();
-        mnavigationMenu=findViewById(R.id.navigation_menu_id);
-        mnavigationMenu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                switch (menuItem.getItemId()){
-                    case R.id.exit_id:
-                        Toast.makeText(getApplicationContext(),"on construction hundai",Toast.LENGTH_SHORT).show();
+        vechileSpinner = findViewById(R.id.select_vechiles_id);
+        initList();
+        mAdapter = new VechileAdapter(this, vechileCategory);
 
-                        default:
-                            return false;
-                }
+
+        vechileSpinner.setAdapter(mAdapter);
+
+        vechileSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+
+
+
+                vechicelSpinner_listModel clickedItem = (vechicelSpinner_listModel) parent.getItemAtPosition(position);
+                String clickedVechilesName = clickedItem.getmVehcileName();
+                Toast.makeText(MapsActivity.this, clickedVechilesName + " selected", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
 
 
+
+    mnavigationMenu =findViewById(R.id.navigation_menu_id);
+        mnavigationMenu.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener()
+
+    {
+        @Override
+        public boolean onNavigationItemSelected (@NonNull MenuItem menuItem){
+        switch (menuItem.getItemId()) {
+            case R.id.exit_id:
+                Toast.makeText(getApplicationContext(), "on construction hundai", Toast.LENGTH_SHORT).show();
+
+            default:
+                return false;
+        }
+
+    }
+    });
+
+
+
         ParkingLocationLatLong();
 
-        fab1_id = findViewById(R.id.fab1_id);
-        fab1_id.setOnClickListener(new View.OnClickListener() {
+        locationFab = findViewById(R.id.fab_id);
+        locationFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent sendTo_multipleMarkerActivity = new Intent(getApplicationContext()
-                        , MultipleMarkerActivity.class);
-                startActivity(sendTo_multipleMarkerActivity);
+
+                if(myLatitude!=null & myLongitude!=null) {
+
+                    LatLng currentLocation = new LatLng(myLatitude, myLongitude);
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 17));
+                }
+
             }
         });
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -115,6 +178,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -124,11 +189,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                myDesLatitude = marker.getPosition().latitude;
-                myDesLongitude = marker.getPosition().longitude;
+                showRoutePath(marker.getPosition().latitude,marker.getPosition().longitude);
 
-                MarkerDetailedBottomSheet bottomSheet = new MarkerDetailedBottomSheet(marker.getTitle());
-                bottomSheet.show(getSupportFragmentManager(), "detail");
+               /* MarkerDetailedBottomSheet bottomSheet = new MarkerDetailedBottomSheet(marker.getTitle(),marker.getPosition().latitude,marker.getPosition().longitude);
+                bottomSheet.show(getSupportFragmentManager(), "detail");*/
                 return false;
             }
         });
@@ -158,11 +222,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(myLoc, 16));
                     FirstZoomLocation = "No";
 
+
                 } else {
                     myLatitude = location.getLatitude();
                     myLongitude = location.getLongitude();
                     Log.d("myloc", "Latitude " + myLatitude + " Longitude " + myLongitude);
-                    //mMap.clear();
+                    mMap.clear();
+                    addingParkingLocationMarker();
                     mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
                     LatLng myLoc = new LatLng(myLatitude, myLongitude);
                     mMap.addMarker(new MarkerOptions().position(myLoc).title("My current location"));
@@ -180,17 +246,21 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onProviderEnabled(String s) {
                 Toast.makeText(getApplicationContext(), "onProviderEnabled", Toast.LENGTH_SHORT).show();
+                isGPs=true;
 
             }
 
             @Override
             public void onProviderDisabled(String s) {
                 Toast.makeText(getApplicationContext(), "onProviderDisabled", Toast.LENGTH_SHORT).show();
+                isGPs=false;
 
-                call();
+          call();
+
 
             }
         };
+
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -222,20 +292,33 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             new AlertDialog.Builder(this)
                     .setTitle("For a better experience , trun on the device location which use google location service.")  // GPS not found
                     // .setMessage("Please enable gps") // Want to enable?
+
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+
+                            if(!isGPs){
+                                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        call();
+                                    }
+                                }, 5000);
+                            }
                         }
                     })
                     .setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            new Handler().postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    call();
-                                }
-                            }, 5000);
+                            if (!isGPs) {
+                                new Handler().postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        call();
+                                    }
+                                }, 5000);
+                            }
                         }
                     })
                     .show();
@@ -357,35 +440,6 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         lat_lng.add(mLatLng);
     }
 
-    public void getDirection() {
-        MarkerOptions orign = new MarkerOptions().position(new LatLng(myLatitude, myLongitude)).title("Location 1");
-        MarkerOptions destination = new MarkerOptions().position(new LatLng(myDesLatitude, myDesLatitude)).title("Location 2");
-        new FetchURL(MapsActivity.this).execute(getUrl(orign.getPosition(), destination.getPosition(), "driving"), "driving");
-
-    }
-
-    public String getUrl(LatLng origin, LatLng dest, String directionMode) {
-        // Origin of route
-        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
-        // Destination of route
-        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-        // Mode
-        String mode = "mode=" + directionMode;
-        // Building the parameters to the web service
-        String parameters = str_origin + "&" + str_dest + "&" + mode;
-        // Output format
-        String output = "json";
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters + "&key=" + getString(R.string.google_maps_key);
-        return url;
-    }
-
-    public void onTaskDone(Object... values) {
-        if (currentPolyline != null)
-            currentPolyline.remove();
-        currentPolyline = mMap.addPolyline((PolylineOptions) values[0]);
-    }
-
 
     private void setUpToolbar() {
 
@@ -395,9 +449,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
 
-
-
-        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,mToolbar, R.string.app_name, R.string.app_name);
+        mActionBarDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.app_name, R.string.app_name);
         mDrawerLayout.addDrawerListener(mActionBarDrawerToggle);
         mActionBarDrawerToggle.syncState();
 
@@ -407,4 +459,87 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    public static void setWindowFlag(Activity activity, final int bits, boolean on) {
+        Window win = activity.getWindow();
+        WindowManager.LayoutParams winParams = win.getAttributes();
+        if (on) {
+            winParams.flags |= bits;
+        } else {
+            winParams.flags &= ~bits;
+        }
+        win.setAttributes(winParams);
+    }
+
+    private void initList() {
+        vechileCategory = new ArrayList<>();
+        vechileCategory.add(new vechicelSpinner_listModel("Select", R.drawable.select_ic));
+        vechileCategory.add(new vechicelSpinner_listModel("Bike", R.drawable.car_ic));
+        vechileCategory.add(new vechicelSpinner_listModel("Car", R.drawable.motorcycle_ic));
+        vechileCategory.add(new vechicelSpinner_listModel("Cycle", R.drawable.bicycle_ic));
+    }
+
+    public void showRoutePath(Double lat,Double lon){
+        Toast.makeText(getApplicationContext(),String.valueOf(lat) + "nn" +String.valueOf(lon) +String.valueOf(myLatitude) +"nn" +String.valueOf(myLongitude),Toast.LENGTH_LONG).show();
+
+        Routing routing = new Routing.Builder().key("AIzaSyC4LSlREEMHiOUvmdB3QX8HNsTYxdren2k")
+                .travelMode(AbstractRouting.TravelMode.DRIVING)
+                .withListener(this)
+                .alternativeRoutes(false)
+                .waypoints(new LatLng(myLatitude,myLongitude), new LatLng(lat,lon))
+                .build();
+    }
+
+    @Override
+    public void onRoutingFailure(RouteException e) {
+        if(e != null) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(this, "Something went wrong, Try again", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onRoutingStart() {
+
+    }
+
+    @Override
+    public void onRoutingSuccess(ArrayList<Route> route, int i) {
+        if(polylines.size()>0) {
+            for (Polyline poly : polylines) {
+                poly.remove();
+            }
+        }
+
+        polylines = new ArrayList<>();
+        //add route(s) to the map.
+        for (int j = 0; j <route.size(); j++) {
+
+            //In case of more than 5 alternative routes
+            int colorIndex = j % COLORS.length;
+
+            PolylineOptions polyOptions = new PolylineOptions();
+            polyOptions.color(getResources().getColor(COLORS[colorIndex]));
+            polyOptions.width(10 + j * 3);
+            polyOptions.addAll(route.get(j).getPoints());
+            Polyline polyline = mMap.addPolyline(polyOptions);
+            polylines.add(polyline);
+
+            Toast.makeText(getApplicationContext(),"Route "+ (i+1) +": distance - "+ route.get(i).getDistanceValue()+": duration - "+ route.get(i).getDurationValue(),Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
+    @Override
+    public void onRoutingCancelled() {
+
+    }
+
+    public  void erasePolines(){
+        for(Polyline line:polylines){
+            line.remove();
+        }
+        polylines.clear();
+    }
 }
