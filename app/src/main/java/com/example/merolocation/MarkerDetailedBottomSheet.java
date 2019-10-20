@@ -3,6 +3,7 @@ package com.example.merolocation;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,15 +17,12 @@ import androidx.annotation.Nullable;
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 
 public class MarkerDetailedBottomSheet extends BottomSheetDialogFragment {
+
     private String location;
-    private Double lat;
-    private Double lon;
 
 
-    public MarkerDetailedBottomSheet(String text,Double lat,Double lon) {
+    public MarkerDetailedBottomSheet(String text) {
         this.location = text;
-        this.lat=lat;
-        this.lon=lon;
     }
 
     @Nullable
@@ -41,9 +39,8 @@ public class MarkerDetailedBottomSheet extends BottomSheetDialogFragment {
             @Override
             public void onClick(View view) {
 
-                ((MapsActivity)getActivity()).showRoutePath(lat,lon);
-
-                dismiss();
+            Toast.makeText(getActivity(),"onclicked is working just fine.",Toast.LENGTH_SHORT).show();
+                //dismiss();
 
             }
         });

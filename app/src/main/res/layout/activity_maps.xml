@@ -44,6 +44,7 @@
                     android:text="q"/>
 
                 <EditText
+                    android:id="@+id/searchLocation_id"
                     android:imeOptions="actionSearch"
                     android:inputType="text"
                     android:layout_width="240dp"

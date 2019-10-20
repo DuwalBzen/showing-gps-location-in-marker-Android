@@ -19,9 +19,8 @@
         android:text="labim mall"
         android:textSize="18sp"
         android:padding="10dp"
-
-
         />
+
 
     <Button
         android:id="@+id/direction"

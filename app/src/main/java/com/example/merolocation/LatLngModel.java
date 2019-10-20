@@ -6,6 +6,18 @@ public class LatLngModel implements Serializable {
 
     private int id;
     private  double lat , lng;
+    private String Name;
+    private String vechileType;
+
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public double getLat() {
         return lat;
@@ -23,14 +35,6 @@ public class LatLngModel implements Serializable {
         this.lng = lng;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getName() {
         return Name;
     }
@@ -39,7 +43,11 @@ public class LatLngModel implements Serializable {
         Name = name;
     }
 
-    private String Name;
+    public String getVechileType() {
+        return vechileType;
+    }
 
-
+    public void setVechileType(String vechileType) {
+        this.vechileType = vechileType;
+    }
 }
